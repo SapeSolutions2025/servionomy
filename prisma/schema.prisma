@@ -1,0 +1,91 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  email              String        @unique
+  name               String?
+  role               String        @default("user")
+  subscriptionStatus String        @default("free")
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  transactions       Transaction[]
+}
+
+model Service {
+  id           String        @id @default(cuid())
+  name         String
+  price        Float
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+model Employee {
+  id           String        @id @default(cuid())
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+model Transaction {
+  id         String   @id @default(cuid())
+  date       DateTime @default(now())
+  serviceId  String
+  service    Service  @relation(fields: [serviceId], references: [id])
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  amount     Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  cajaId     String
+  caja       Caja     @relation(fields: [cajaId], references: [id])
+  type       TransactionType
+}
+
+model Caja {
+  id            String        @id @default(cuid())
+  fechaApertura DateTime      @default(now())
+  fechaCierre   DateTime?
+  saldoInicial  Float
+  saldoFinal    Float?
+  transactions  Transaction[]
+  compras       Compra[]
+}
+
+model Insumo {
+  id          String   @id @default(cuid())
+  nombre      String
+  descripcion String
+  costo       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  compras     Compra[]
+}
+
+model Compra {
+  id        String   @id @default(cuid())
+  insumoId  String
+  insumo    Insumo   @relation(fields: [insumoId], references: [id])
+  cantidad  Int
+  costo     Float
+  fecha     DateTime @default(now())
+  cajaId    String
+  caja      Caja     @relation(fields: [cajaId], references: [id])
+}
+
+enum TransactionType {
+  VENTA
+  COMPRA
+}
+
