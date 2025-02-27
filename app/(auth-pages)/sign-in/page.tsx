@@ -1,71 +1,45 @@
-"use client"
-import { useState } from "react"
-import type React from "react"
-
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { signInAction } from "@/app/actions";
+import { FormMessage, Message } from "@/components/form-message";
+import { SubmitButton } from "@/components/submit-button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function SignIn() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const router = useRouter()
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Aquí iría la lógica de autenticación
-    console.log("Sign in with", email, password)
-    // Redirigir al usuario a la página principal después de iniciar sesión
-    router.push("/protected")
-  }
-
+export default async function Login(props: { searchParams: Promise<Message> }) {
+  const searchParams = await props.searchParams;
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-[350px]">
-        <CardHeader>
-          <CardTitle>Iniciar Sesión</CardTitle>
-          <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="correo@ejemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Contraseña
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+    <Card className="w-[350px]">
+      <CardHeader>
+        <CardTitle>Iniciar Sesión</CardTitle>
+        <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
+      </CardHeader>
+      <form className="flex flex-col w-full">
+      <CardContent className="space-y-4">
+          <Label htmlFor="email">Email</Label>
+          <Input name="email" placeholder="you@example.com" required />
+          <div className="flex justify-between items-center">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              className="text-xs text-foreground underline"
+              href="/forgot-password"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+          <Input
+            type="password"
+            name="password"
+            placeholder="Your password"
+            required
+          />
           </CardContent>
+          <FormMessage message={searchParams} />
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full transition-all duration-200 hover:scale-105">
+            <SubmitButton pendingText="Signing In..." formAction={signInAction} className="w-full transition-all duration-200 hover:scale-105 my-2">
               Iniciar Sesión
-            </Button>
+            </SubmitButton>
             <p className="text-sm text-center text-gray-600">
               ¿No tienes una cuenta?{" "}
               <Link href="/sign-up" className="text-primary hover:underline">
@@ -76,6 +50,6 @@ export default function SignIn() {
         </form>
       </Card>
     </div>
-  )
+  );
 }
 
