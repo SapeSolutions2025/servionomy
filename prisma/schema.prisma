@@ -8,17 +8,90 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Modelo principal de usuario (se usa para logueo y autenticación)
 model User {
-  id                 String        @id @default(cuid())
-  email              String        @unique
+  id                 String   @id @default(cuid())
+  email              String   @unique
   name               String?
-  role               String        @default("user")
-  subscriptionStatus String        @default("free")
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  transactions       Transaction[]
+  role               String   @default("user")
+  subscriptionStatus String   @default("free")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Si el usuario es administrador de una Company
+  companyAdmin Company? @relation("CompanyAdmin")
+
+  // Relación con Business a través de la tabla intermedia BusinessUser
+  businessUsers BusinessUser[]
+
+  transactions Transaction[]
 }
 
+// Una empresa creada por un User, que actúa como admin de la misma.
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  adminId   String   @unique
+  admin     User     @relation("CompanyAdmin", fields: [adminId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businesses Business[]
+}
+
+// Representa la asignación de un usuario a un Business en un rol determinado.
+model BusinessUser {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  // rol en el contexto del negocio (por ejemplo: "cajero", "vendedor", etc.)
+  role       String   @default("employee")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, businessId])
+}
+
+// Un negocio que pertenece a una Company.
+// Aquí se registrarán las operaciones, caja, etc.
+model Business {
+  id        String   @id @default(cuid())
+  name      String
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relación de usuarios asignados a este negocio.
+  businessUsers BusinessUser[]
+
+  // Caja(s) asociada(s) a este negocio.
+  cashRegister CashRegister[]
+
+  // Transacciones generadas en el contexto de este negocio.
+  transactions Transaction[]
+}
+
+// Record of the cash register associated with a Business.
+// All transactions (sales, expenses, etc.) are accumulated here.
+model CashRegister {
+  id             String    @id @default(cuid())
+  openDate       DateTime  @default(now())
+  closeDate      DateTime?
+  initialBalance Float
+  finalBalance   Float?
+  businessId     String
+  business       Business  @relation(fields: [businessId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  transactions Transaction[]
+}
+
+// Un servicio que se vende en el negocio.
+// Se utiliza para identificar los productos/servicios en una venta.
 model Service {
   id           String        @id @default(cuid())
   name         String
@@ -28,64 +101,37 @@ model Service {
   transactions Transaction[]
 }
 
-model Employee {
-  id           String        @id @default(cuid())
-  name         String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transactions Transaction[]
-}
-
+// Registro de cada operación en el negocio.
+// Puede ser una venta (ingreso) o un gasto (salida de caja).
 model Transaction {
-  id         String   @id @default(cuid())
-  date       DateTime @default(now())
-  serviceId  String
-  service    Service  @relation(fields: [serviceId], references: [id])
-  employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id])
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  amount     Float
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  cajaId     String
-  caja       Caja     @relation(fields: [cajaId], references: [id])
-  type       TransactionType
-}
-
-model Caja {
-  id            String        @id @default(cuid())
-  fechaApertura DateTime      @default(now())
-  fechaCierre   DateTime?
-  saldoInicial  Float
-  saldoFinal    Float?
-  transactions  Transaction[]
-  compras       Compra[]
-}
-
-model Insumo {
   id          String   @id @default(cuid())
-  nombre      String
-  descripcion String
-  costo       Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  compras     Compra[]
+  date        DateTime @default(now())
+  description String // Descripción de la operación (ej. "Venta de servicio X" o "Compra de insumos")
+
+  // Si la transacción está relacionada a un servicio vendido, se registra.
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id])
+
+  // Si se necesita asociar la operación a un empleado, se podría usar BusinessUser
+  // Para efectos de audit trail se deja la relación a User (quien registró la operación)
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  amount Float // Monto positivo para ventas, negativo para gastos
+
+  cashRegisterId String
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id])
+  businessId     String
+  business       Business     @relation(fields: [businessId], references: [id])
+
+  type TransactionType // VENTA o GASTO
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Compra {
-  id        String   @id @default(cuid())
-  insumoId  String
-  insumo    Insumo   @relation(fields: [insumoId], references: [id])
-  cantidad  Int
-  costo     Float
-  fecha     DateTime @default(now())
-  cajaId    String
-  caja      Caja     @relation(fields: [cajaId], references: [id])
-}
-
+// Enum para distinguir el tipo de transacción
 enum TransactionType {
   VENTA
-  COMPRA
+  GASTO
 }
-

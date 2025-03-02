@@ -1,4 +1,5 @@
 "use server";
+
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -16,7 +17,6 @@ export default async function getUser() {
     return null;
   }
 }
-
 
 export async function updateProfileAction(
   id: string,

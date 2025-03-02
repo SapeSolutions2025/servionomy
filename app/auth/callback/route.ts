@@ -1,4 +1,4 @@
-import { createUserInPrisma } from "@/app/actions";
+import { createUserInPrisma } from "@/actions/actions";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -13,14 +13,17 @@ export async function GET(request: Request) {
   const email = requestUrl.searchParams.get("email")?.toString();
   const role = requestUrl.searchParams.get("role")?.toString();
 
+  console.log("code", code);
+  console.log("email", email);
+  console.log("redirect_to", redirectTo);
+
   if (code) {
-    const supabase = await createClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const supabase = await createClient();
+    await supabase.auth.exchangeCodeForSession(code);
     if (email) {
-      await createUserInPrisma(email, role)
+      await createUserInPrisma(email, role);
     }
   }
-
 
   if (redirectTo) {
     return NextResponse.redirect(`${origin}${redirectTo}`);

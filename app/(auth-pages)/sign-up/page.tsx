@@ -1,9 +1,6 @@
-import { signUpAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
-import { SubmitButton } from "@/components/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
+import { signUpAction } from '@/actions/actions'
+import { FormMessage, Message } from '@/components/form-message'
+import { SubmitButton } from '@/components/submit-button'
 import {
   Card,
   CardContent,
@@ -11,20 +8,22 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { SmtpMessage } from "../smpt-message";
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import Link from 'next/link'
+import { SmtpMessage } from '../smpt-message'
 
 export default async function Signup(props: {
-  searchParams: Promise<Message>;
+  searchParams: Promise<Message>
 }) {
-  const searchParams = await props.searchParams;
-  if ("message" in searchParams) {
+  const searchParams = await props.searchParams
+  if ('message' in searchParams) {
     return (
       <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
         <FormMessage message={searchParams} />
       </div>
-    );
+    )
   }
 
   return (
@@ -57,7 +56,7 @@ export default async function Signup(props: {
               Registrarse
             </SubmitButton>
             <p className="text-sm text-center text-gray-600">
-              ¿Ya tienes una cuenta?{" "}
+              ¿Ya tienes una cuenta?{' '}
               <Link href="/sign-in" className="text-primary hover:underline">
                 Inicia sesión
               </Link>
@@ -67,5 +66,5 @@ export default async function Signup(props: {
         <SmtpMessage />
       </Card>
     </div>
-  );
+  )
 }
